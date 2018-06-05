@@ -7,6 +7,8 @@ const $ = require('cheerio')
 let url_page = 'https://sxbb.me/WOuba' // 目标页面
 let resultDir = `${__dirname}/result` // 文件保存路径
 
+fsExistsSync(resultDir)
+
 new Promise(resolve => {
   queryPage(url_page, htmlStr => {
     // 取得 iframe 的 dom 节点
@@ -21,16 +23,24 @@ new Promise(resolve => {
 .then(url_iframe => {
   // 抓取文件下载路径以及文件名字，进行下载
   queryPage(url_iframe, htmlStr => {
-    let linkArr = Array.from($('li > a', htmlStr)).map(el => ({
-      href: el.attribs.onclick.match(/\'(.+)\'/)[1], // 取得文件下载路径
-      name: el.childNodes.find(el => el.type === 'text').data // 取得文件名
-    }))
+    let linkArr = Array.from($('li > a', htmlStr)).map(el => {
+      let href = el.attribs.onclick.match(/\'(.+)\'/)[1] // 取得文件下载路径
+      let name = el.childNodes.find(el => el.type === 'text').data // 取得文件名
 
-    linkArr.forEach(el => {
-      downloadFile(el.href, el.name, _ => {
-        console.log(`${el.name} finish!`)
+      return new Promise(resolve => {
+        downloadFile(href, name, _ => {
+          console.log(` -- ${name} finish!`)
+          resolve()
+        })
       })
     })
+
+
+    Promise
+      .all(linkArr)
+      .then(_ => {
+        console.log('done !')
+      })
   })
 })
 
@@ -71,4 +81,20 @@ function downloadFile(url, filename, _cb = function() {}){
       _cb()
     })
   }
+}
+
+// 检测文件或者文件夹存在
+function fsExistsSync(path) {
+  try {
+    fs.accessSync(path, fs.F_OK)
+  } catch (err) {
+    if (err.errno === -4058) {
+      // 文件夹不存在，创建文件夹
+      fs.mkdirSync(path)
+    } else {
+      // 其他错误，中断程序
+      throw err
+    }
+  }
+  return true
 }
