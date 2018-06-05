@@ -1,0 +1,15 @@
+{
+  "name": "muti-download-sxbb",
+  "version": "1.0.0",
+  "description": "针对师兄帮帮(https://sxbb.me)的资源下载爬虫脚本",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js"
+  },
+  "author": "AymaxLi",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2"
+  }
+}
